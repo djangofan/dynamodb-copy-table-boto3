@@ -2,9 +2,9 @@
 
 Author: Jon Austen
 
-Requires 
+Warning:  don't use Python 2.x
 
-    pip3 install boto3
+Requires :  pip3 install boto3
 
 ### HOWTO
 
