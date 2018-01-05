@@ -5,6 +5,8 @@ import multiprocessing
 import itertools
 from time import sleep
 
+## This script is unfinished
+
 # Uncomment this section for after AWS has updated total item count
 
 # new_table = sys.argv[1]
