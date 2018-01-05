@@ -32,7 +32,7 @@ def copy_items(src_table, dst_table, client, segment, total_segments):
                 }
             })
 
-        #print 'Process {0} put {1} items'.format(segment, item_count)
+        print("Process {0} put {1} items".format(segment, item_count))
         client.batch_write_item(
             RequestItems={
                dst_table: batch
