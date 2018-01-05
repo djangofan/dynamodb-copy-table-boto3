@@ -5,18 +5,11 @@ import multiprocessing
 import itertools
 from time import sleep
 
-## This script is unfinished
-
-# Uncomment this section for after AWS has updated total item count
-
-# new_table = sys.argv[1]
-
-# region = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
+localDynamoHost='http://192.168.99.100:8000'
 
 # iam_role = boto3.session.Session(profile_name='intern')
 # dynamodb = iam_role.resource('dynamodb', region_name=region)
 # table = dynamodb.Table(new_table)
-
 # print table.item_count
 
 
@@ -38,15 +31,20 @@ def scan_table(src_table, client, segment, total_segments, queue):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print 'Usage: %s <source_table_name>' % sys.argv[0]
+    if len(sys.argv) != 3:
+        print("Usage: {0} <source_table_name> <isLocal>".format(sys.argv[0]))
         sys.exit(1)
 
     table_1 = sys.argv[1]
-    region = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
+    isLocal = sys.argv[2]
+    # defaults to us-west-2
+    region = os.getenv('AWS_DEFAULT_REGION', os.getenv('AWS_REGION', 'us-west-2'))
 
-    iam_role = boto3.session.Session(profile_name='intern')
-    db_client = iam_role.client('dynamodb')
+    if not isLocal:
+        iam_role = boto3.session.Session(profile_name='default')
+        db_client = iam_role.client('dynamodb')
+    else:
+        db_client = boto3.client('dynamodb', endpoint_url=localDynamoHost)
 
     queue = multiprocessing.Queue()
     results = []
@@ -54,7 +52,7 @@ if __name__ == "__main__":
     pool_size = 4
     pool = []
 
-    spinner = itertools.cycle(['-', '/', '|', '\\'])
+    #spinner = itertools.cycle(['-', '/', '|', '\\'])
 
     for i in range(pool_size):
         worker = multiprocessing.Process(
@@ -72,7 +70,7 @@ if __name__ == "__main__":
 
     for process in pool:
         while process.is_alive():
-            sys.stdout.write(spinner.next())
+            #sys.stdout.write(spinner.next())
             sys.stdout.flush()
             sleep(0.1)
             sys.stdout.write('\b')
@@ -81,4 +79,4 @@ if __name__ == "__main__":
         count = queue.get()  # will block
         results.append(count)
 
-    print '*** %d items counted. Exiting... ***' % sum(results)
+    print("*** {0} items counted. Exiting...".format(sum(results)))

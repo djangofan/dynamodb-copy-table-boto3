@@ -134,7 +134,8 @@ if __name__ == "__main__":
     table_1 = sys.argv[1]
     table_2 = sys.argv[2]
     isLocal = sys.argv[3]
-    region = os.getenv('AWS_DEFAULT_REGION', 'us-west-2')
+    # defaults to us-west-2
+    region = os.getenv('AWS_DEFAULT_REGION', os.getenv('AWS_REGION', 'us-west-2'))
 
     if not isLocal:
         iam_role = boto3.session.Session(profile_name='default')
