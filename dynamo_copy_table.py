@@ -42,7 +42,7 @@ def copy_items(src_table, dst_table, client, segment, total_segments):
 
 def create_table(src_table, dst_table, client):
     # get source table and its schema
-    print("Describe table " + src_table)
+    print("Describe table '" + src_table + "'")
     try:
         table_schema = client.describe_table(TableName=src_table)["Table"]
     except client.exceptions.ResourceNotFoundException:
@@ -51,7 +51,7 @@ def create_table(src_table, dst_table, client):
 
     print("*** Reading key schema from {0} table".format(src_table))
 
-    # create keyword args for copy able
+    # create keyword args for copy table
     keyword_args = {"TableName": dst_table}
 
     keyword_args['KeySchema'] = table_schema['KeySchema']
