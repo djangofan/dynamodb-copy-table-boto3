@@ -1,6 +1,12 @@
 # Make copy of DynamoDB table
 
-### Author: Jon Austen
+Author: Jon Austen
+
+Requires 
+
+    pip3 install boto3
+
+### HOWTO
 
 Copy a dynamo-local with
 
