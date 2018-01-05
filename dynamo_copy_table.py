@@ -7,6 +7,7 @@ import itertools
 
 spinner = itertools.cycle(['-', '/', '|', '\\'])
 
+localDynamoHost='http://192.168.99.100:8000'
 
 def copy_items(src_table, dst_table, client, segment, total_segments):
     # copy over item
@@ -31,7 +32,7 @@ def copy_items(src_table, dst_table, client, segment, total_segments):
                 }
             })
 
-        print "Process %d put %d items" % (segment, item_count)
+        #print 'Process {0} put {1} items'.format(segment, item_count)
         client.batch_write_item(
             RequestItems={
                dst_table: batch
@@ -41,13 +42,14 @@ def copy_items(src_table, dst_table, client, segment, total_segments):
 
 def create_table(src_table, dst_table, client):
     # get source table and its schema
+    print("Describe table " + src_table)
     try:
         table_schema = client.describe_table(TableName=src_table)["Table"]
     except client.exceptions.ResourceNotFoundException:
-        print "!!! Table %s does not exist. Exiting..." % src_table
+        print("!!! Table {0} does not exist. Exiting...".format(src_table))
         sys.exit(1)
 
-    print '*** Reading key schema from %s table' % src_table
+    print("*** Reading key schema from {0} table".format(src_table))
 
     # create keyword args for copy able
     keyword_args = {"TableName": dst_table}
@@ -105,12 +107,12 @@ def create_table(src_table, dst_table, client):
     # create copy table
     try:
         client.describe_table(TableName=dst_table)
-        print '!!! Table %s already exists. Exiting...' % dst_table
+        print("!!! Table {0} already exists. Exiting...".format(dst_table))
         sys.exit(0)
     except client.exceptions.ResourceNotFoundException:
         client.create_table(**keyword_args)
 
-        print '*** Waiting for the new table %s to become active' % dst_table
+        print("*** Waiting for the new table {0} to become active".format(dst_table))
         sleep(5)
 
         while client.describe_table(TableName=dst_table)['Table']['TableStatus'] != 'ACTIVE':
@@ -118,25 +120,29 @@ def create_table(src_table, dst_table, client):
             sys.stdout.flush()
             sleep(0.1)
             sys.stdout.write('\b')
-        print '*** New table %s to is now active!' % dst_table
+        print("*** New table {0} to is now active!".format(dst_table))
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print 'Usage: %s <source_table_name>' \
-              ' <destination_table_name>' % sys.argv[0]
+    if len(sys.argv) != 4:
+        print("Usage: {0} <source_table_name> <destination_table_name> <isLocal>".format(sys.argv[0]))
         sys.exit(1)
 
     table_1 = sys.argv[1]
     table_2 = sys.argv[2]
-    region = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
+    isLocal = sys.argv[3]
+    region = os.getenv('AWS_DEFAULT_REGION', 'us-west-2')
 
-    iam_role = boto3.session.Session(profile_name='default')
-    db_client = iam_role.client('dynamodb')
+    if not isLocal:
+        iam_role = boto3.session.Session(profile_name='default')
+        db_client = iam_role.client('dynamodb')
+    else:
+        db_client = boto3.client('dynamodb', endpoint_url=localDynamoHost)
+
 
     create_table(table_1, table_2, db_client)
 
-    pool_size = 8  # tested with 4, took 5 minutes to copy 150,000+ items
+    pool_size = 4  # tested with 4, took 5 minutes to copy 150,000+ items
     pool = []
 
     for i in range(pool_size):
@@ -156,4 +162,4 @@ if __name__ == "__main__":
     for process in pool:
         process.join()
 
-    print '*** All Jobs Done. Exiting... ***'
+    print("*** All Jobs Done. Exiting... ***")
