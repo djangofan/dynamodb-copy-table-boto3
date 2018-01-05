@@ -4,7 +4,11 @@ Author: Jon Austen
 
 Warning:  don't use Python 2.x
 
-Requires :  pip3 install boto3
+Requires :
+
+    $ curl -O https://bootstrap.pypa.io/get-pip.py
+    $ python3 get-pip.py --user
+    $ pip3 install awscli --upgrade --user
 
 ### HOWTO
 
