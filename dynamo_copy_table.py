@@ -48,6 +48,9 @@ def create_table(src_table, dst_table, client):
     except client.exceptions.ResourceNotFoundException:
         print("!!! Table {0} does not exist. Exiting...".format(src_table))
         sys.exit(1)
+    except:
+        print("!!! Error reading table {0} . Exiting...".format(src_table))
+        sys.exit(1)
 
     print("*** Reading key schema from {0} table".format(src_table))
 
@@ -63,7 +66,7 @@ def create_table(src_table, dst_table, client):
     if table_schema.get("GlobalSecondaryIndexes"):
         for item in table_schema["GlobalSecondaryIndexes"]:
             index = {}
-            for k, v in item.iteritems():
+            for k, v in item.items():
                 if k in ["IndexName", "KeySchema", "Projection", "ProvisionedThroughput"]:
                     if k == "ProvisionedThroughput":
                         # uncomment below to have same read/write capacity as original table
